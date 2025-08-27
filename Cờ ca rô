@@ -1,60 +1,98 @@
-from operator import truediv
 from random import randint
-luoi=[0,1,2,3,4,5,6,7,8]
-win=''
+
+# Khoi tao ban co
+luoi = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+win = ''
+
 def inluoi():
-    for i in range(0,9,3):
-        print(luoi[i],'|',luoi[i+1],'|',luoi[i+2])
-        print('---------')
-inluoi()
+    print("\nBàn cờ hiện tại:")
+    for i in range(0, 9, 3):
+        print(f" {luoi[i]} | {luoi[i+1]} | {luoi[i+2]} ")
+        if i < 6:  # Không in dòng kẻ cuối cùng
+            print("-----------")
+    print()
+
 def trong():
+    #Kiem tra xem ô còn trống không
     for i in range(9):
-        if luoi[i]!='X' and luoi[i]!='O':
+        if luoi[i] != 'X' and luoi[i] != 'O':
             return True
-def ktra_dong(chon,x1,x2,x3):
-    if luoi[x1]==chon and luoi[x2]==chon and luoi[x3]==chon:
-        return True
     return False
+
+def ktra_dong(chon, x1, x2, x3):
+    #Kiem tra 3 ô có cùng kí hiệu không
+    return luoi[x1] == chon and luoi[x2] == chon and luoi[x3] == chon
+
 def ktra_all(chon):
-    #Hàng ngang
-    if ktra_dong(chon,0,1,2)==True:
+    #Kiểm tra tất cả các trường hợp thắng
+    # Hàng ngang
+    if ktra_dong(chon, 0, 1, 2) or ktra_dong(chon, 3, 4, 5) or ktra_dong(chon, 6, 7, 8):
         return True
-    if ktra_dong(chon,3,4,5)==True:
+    # Hàng dọc  
+    if ktra_dong(chon, 0, 3, 6) or ktra_dong(chon, 1, 4, 7) or ktra_dong(chon, 2, 5, 8):
         return True
-    if ktra_dong(chon,6,7,8)==True:
-        return True
-    #Hàng dọc
-    if ktra_dong(chon,0,3,6)==True:
-        return True
-    if ktra_dong(chon,1,4,7)==True:
-        return True
-    if ktra_dong(chon,2,5,8)==True:
-        return True
-    #Đường chéo
-    if ktra_dong(chon,0,4,8)==True:
-        return True
-    if ktra_dong(chon,2,4,6)==True:
+    # Đường chéo
+    if ktra_dong(chon, 0, 4, 8) or ktra_dong(chon, 2, 4, 6):
         return True
     return False
+
+def nuoc_di_may():
+    #Tìm nước đi hợp lệ cho máy
+    while True:
+        may = randint(0, 8)
+        if luoi[may] != 'X' and luoi[may] != 'O':
+            return may
+        
+# Hiển thị bàn cờ ban đầu
+print("=== GAME TIC-TAC-TOE ===")
+print("Bạn là X, máy là O")
+inluoi()
+
+# Vòng lặp chính
 while trong():
-    nguoi=int(input('Bạn chọn một ô trong [0..8]) :'))
-    if luoi[nguoi]=='X' or luoi[nguoi]=='O':
-        print('Ô đã bị chọn')
-    else:
-        luoi[nguoi]='X'
-    may=randint(0,8)
-    if luoi[may]=='X' or luoi[may]=='O':
-        pass
-    else:
-        luoi[may]='O'
-    inluoi()
+    # Lượt người chơi
+    while True:
+        try:
+            nguoi = int(input('Bạn chọn một ô (0-8): '))
+            if nguoi < 0 or nguoi > 8:
+                print('Vui lòng chọn số từ 0 đến 8!')
+                continue
+            if luoi[nguoi] == 'X' or luoi[nguoi] == 'O':
+                print('Ô đã được chọn, hãy chọn ô khác!')
+                continue
+            else:
+                luoi[nguoi] = 'X'
+                break
+        except ValueError:
+            print('Vui lòng nhập một số!')
+    
+    # Kiểm tra người chơi thắng
     if ktra_all('X'):
-        win='Bạn'
+        win = 'Bạn'
         break
+    
+    # Kiểm tra hòa sau nước đi của người chơi
+    if not trong():
+        break
+    
+    # Lượt máy
+    may_chon = nuoc_di_may()
+    luoi[may_chon] = 'O'
+    print(f"Máy chọn ô {may_chon}")
+    
+    # Hiển thị bàn cờ
+    inluoi()
+    
+    # Kiểm tra máy thắng
     if ktra_all('O'):
-        win='Computer'
+        win = 'Máy'
         break
-if win=='':
-    print('Hòa')
+
+# Hiển thị kết quả cuối game
+inluoi()
+if win == '':
+    print('KẾT QUẢ: HÒA!')
 else:
-    print(win,'Thắng')
+    print(f'KẾT QUẢ: {win.upper()} THẮNG!')
+    
+print("\nCảm ơn bạn đã chơi!")
