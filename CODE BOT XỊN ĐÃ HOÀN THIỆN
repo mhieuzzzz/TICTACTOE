@@ -1,0 +1,309 @@
+import tkinter as tk
+from tkinter import messagebox, font
+from random import randint
+import threading
+import time
+
+class TicTacToeGUI:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("🎮 TIC-TAC-TOE vs AI MINIMAX 🤖")
+        self.root.geometry("600x700")
+        self.root.resizable(False, False)
+        
+        # Gradient background color
+        self.root.configure(bg='#1a1a2e')
+        
+        # Game logic variables
+        self.luoi = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        self.game_over = False
+        self.player_turn = True
+        
+        # Fonts
+        self.title_font = font.Font(family="Arial Black", size=20, weight="bold")
+        self.button_font = font.Font(family="Arial", size=28, weight="bold")
+        self.info_font = font.Font(family="Arial", size=12)
+        self.status_font = font.Font(family="Arial", size=14, weight="bold")
+        
+        self.setup_ui()
+        
+    def setup_ui(self):
+        # Title
+        title_frame = tk.Frame(self.root, bg='#1a1a2e')
+        title_frame.pack(pady=20)
+        
+        title_label = tk.Label(title_frame, 
+                              text="🎮 TIC-TAC-TOE vs AI 🤖",
+                              font=self.title_font,
+                              fg='#00d4ff',
+                              bg='#1a1a2e')
+        title_label.pack()
+        
+        # Player info
+        info_frame = tk.Frame(self.root, bg='#1a1a2e')
+        info_frame.pack(pady=10)
+        
+        player_info = tk.Label(info_frame,
+                              text="🔥 Bạn: X  |  🤖 AI: O",
+                              font=self.info_font,
+                              fg='#ffffff',
+                              bg='#1a1a2e')
+        player_info.pack()
+        
+        # Status label
+        self.status_label = tk.Label(self.root,
+                                    text="🎯 Lượt của bạn!",
+                                    font=self.status_font,
+                                    fg='#00ff88',
+                                    bg='#1a1a2e')
+        self.status_label.pack(pady=10)
+        
+        # Game board frame
+        board_frame = tk.Frame(self.root, bg='#1a1a2e')
+        board_frame.pack(pady=20)
+        
+        # Create 3x3 grid of buttons
+        self.buttons = []
+        for i in range(3):
+            button_row = []
+            for j in range(3):
+                btn_index = i * 3 + j
+                btn = tk.Button(board_frame,
+                               text="",
+                               font=self.button_font,
+                               width=4,
+                               height=2,
+                               bg='#16213e',
+                               fg='#ffffff',
+                               activebackground='#0f3460',
+                               activeforeground='#00d4ff',
+                               relief='raised',
+                               bd=3,
+                               cursor='hand2',
+                               command=lambda idx=btn_index: self.player_move(idx))
+                
+                # Hover effects
+                btn.bind('<Enter>', lambda e, b=btn: self.on_hover_enter(b))
+                btn.bind('<Leave>', lambda e, b=btn: self.on_hover_leave(b))
+                
+                btn.grid(row=i, column=j, padx=5, pady=5)
+                button_row.append(btn)
+            self.buttons.append(button_row)
+        
+        # Control buttons frame
+        control_frame = tk.Frame(self.root, bg='#1a1a2e')
+        control_frame.pack(pady=30)
+        
+        # New game button
+        new_game_btn = tk.Button(control_frame,
+                                text="🔄 Chơi lại",
+                                font=self.info_font,
+                                bg='#00d4ff',
+                                fg='#1a1a2e',
+                                activebackground='#00a8cc',
+                                activeforeground='#ffffff',
+                                relief='raised',
+                                bd=2,
+                                padx=20,
+                                pady=10,
+                                cursor='hand2',
+                                command=self.new_game)
+        new_game_btn.pack(side='left', padx=10)
+        
+        # Quit button
+        quit_btn = tk.Button(control_frame,
+                            text="❌ Thoát",
+                            font=self.info_font,
+                            bg='#ff4757',
+                            fg='#ffffff',
+                            activebackground='#ff3742',
+                            activeforeground='#ffffff',
+                            relief='raised',
+                            bd=2,
+                            padx=20,
+                            pady=10,
+                            cursor='hand2',
+                            command=self.root.quit)
+        quit_btn.pack(side='right', padx=10)
+        
+        # Score frame
+        score_frame = tk.Frame(self.root, bg='#1a1a2e')
+        score_frame.pack(pady=20)
+        
+        self.score_label = tk.Label(score_frame,
+                                   text="🏆 Tỷ số - Bạn: 0  |  AI: 0  |  Hòa: 0",
+                                   font=self.info_font,
+                                   fg='#ffd700',
+                                   bg='#1a1a2e')
+        self.score_label.pack()
+        
+        # Score tracking
+        self.player_wins = 0
+        self.ai_wins = 0
+        self.draws = 0
+        
+    def on_hover_enter(self, button):
+        if button['text'] == '' and not self.game_over:
+            button.configure(bg='#0f3460', relief='sunken')
+    
+    def on_hover_leave(self, button):
+        if button['text'] == '' and not self.game_over:
+            button.configure(bg='#16213e', relief='raised')
+    
+    def update_button_display(self):
+        for i in range(3):
+            for j in range(3):
+                idx = i * 3 + j
+                if self.luoi[idx] == 'X':
+                    self.buttons[i][j].configure(text='❌', fg='#ff4757', bg='#2d1b2e')
+                elif self.luoi[idx] == 'O':
+                    self.buttons[i][j].configure(text='⭕', fg='#00d4ff', bg='#1b2a2d')
+                else:
+                    self.buttons[i][j].configure(text='', fg='#ffffff', bg='#16213e')
+    
+    def player_move(self, position):
+        if self.game_over or not self.player_turn:
+            return
+            
+        if self.luoi[position] not in ['X', 'O']:
+            self.luoi[position] = 'X'
+            self.update_button_display()
+            
+            if self.ktra_all('X'):
+                self.end_game('Bạn')
+                return
+                
+            if not self.trong():
+                self.end_game('Hòa')
+                return
+            
+            self.player_turn = False
+            self.status_label.configure(text="🤖 AI đang suy nghĩ...", fg='#ff9f43')
+            self.root.update()
+            
+            # AI move with delay for better UX
+            self.root.after(1000, self.ai_move)
+    
+    def ai_move(self):
+        if self.game_over:
+            return
+            
+        ai_position = self.nuoc_di_ai()
+        if ai_position != -1:
+            self.luoi[ai_position] = 'O'
+            self.update_button_display()
+            
+            if self.ktra_all('O'):
+                self.end_game('AI')
+                return
+                
+            if not self.trong():
+                self.end_game('Hòa')
+                return
+        
+        self.player_turn = True
+        self.status_label.configure(text="🎯 Lượt của bạn!", fg='#00ff88')
+    
+    def end_game(self, winner):
+        self.game_over = True
+        
+        if winner == 'Bạn':
+            self.player_wins += 1
+            self.status_label.configure(text="🎉 BẠN THẮNG! 🎉", fg='#00ff88')
+            messagebox.showinfo("Kết quả", "🎉 Chúc mừng! Bạn đã thắng! 🎉")
+        elif winner == 'AI':
+            self.ai_wins += 1
+            self.status_label.configure(text="🤖 AI THẮNG! 🤖", fg='#ff4757')
+            messagebox.showinfo("Kết quả", "🤖 AI đã thắng! Thử lại lần nữa! 🤖")
+        else:
+            self.draws += 1
+            self.status_label.configure(text="🤝 HÒA! 🤝", fg='#ffd700')
+            messagebox.showinfo("Kết quả", "🤝 Trận đấu hòa! 🤝")
+        
+        self.update_score()
+    
+    def update_score(self):
+        self.score_label.configure(
+            text=f"🏆 Tỷ số - Bạn: {self.player_wins}  |  AI: {self.ai_wins}  |  Hòa: {self.draws}"
+        )
+    
+    def new_game(self):
+        self.luoi = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        self.game_over = False
+        self.player_turn = True
+        
+        # Reset all buttons
+        for i in range(3):
+            for j in range(3):
+                self.buttons[i][j].configure(text='', bg='#16213e', fg='#ffffff', relief='raised')
+        
+        self.status_label.configure(text="🎯 Lượt của bạn!", fg='#00ff88')
+    
+    # Game logic methods (giữ nguyên từ code gốc)
+    def trong(self):
+        for i in range(9):
+            if self.luoi[i] != 'X' and self.luoi[i] != 'O':
+                return True
+        return False
+
+    def ktra_dong(self, chon, x1, x2, x3):
+        return self.luoi[x1] == chon and self.luoi[x2] == chon and self.luoi[x3] == chon
+
+    def ktra_all(self, chon):
+        return (self.ktra_dong(chon, 0, 1, 2) or self.ktra_dong(chon, 3, 4, 5) or self.ktra_dong(chon, 6, 7, 8) or
+                self.ktra_dong(chon, 0, 3, 6) or self.ktra_dong(chon, 1, 4, 7) or self.ktra_dong(chon, 2, 5, 8) or
+                self.ktra_dong(chon, 0, 4, 8) or self.ktra_dong(chon, 2, 4, 6))
+
+    def danh_gia(self):
+        if self.ktra_all('O'): return 10
+        elif self.ktra_all('X'): return -10
+        else: return 0
+
+    def minimax(self, do_sau, la_ai):
+        diem = self.danh_gia()
+        if diem == 10: return diem - do_sau
+        if diem == -10: return diem + do_sau
+        if not self.trong(): return 0
+        
+        if la_ai:
+            tot_nhat = -1000
+            for i in range(9):
+                if self.luoi[i] != 'X' and self.luoi[i] != 'O':
+                    cu = self.luoi[i]
+                    self.luoi[i] = 'O'
+                    diem = self.minimax(do_sau + 1, False)
+                    self.luoi[i] = cu
+                    tot_nhat = max(tot_nhat, diem)
+            return tot_nhat
+        else:
+            tot_nhat = 1000
+            for i in range(9):
+                if self.luoi[i] != 'X' and self.luoi[i] != 'O':
+                    cu = self.luoi[i]
+                    self.luoi[i] = 'X'
+                    diem = self.minimax(do_sau + 1, True)
+                    self.luoi[i] = cu
+                    tot_nhat = min(tot_nhat, diem)
+            return tot_nhat
+
+    def nuoc_di_ai(self):
+        tot_nhat = -1000
+        nuoc_di = -1
+        for i in range(9):
+            if self.luoi[i] != 'X' and self.luoi[i] != 'O':
+                cu = self.luoi[i]
+                self.luoi[i] = 'O'
+                diem = self.minimax(0, False)
+                self.luoi[i] = cu
+                if diem > tot_nhat:
+                    tot_nhat = diem
+                    nuoc_di = i
+        return nuoc_di
+    
+    def run(self):
+        self.root.mainloop()
+
+# Chạy game
+if __name__ == "__main__":
+    game = TicTacToeGUI()
+    game.run()
