@@ -16,7 +16,7 @@ class TicTacToe:
         self.root.configure(bg='#2c3e50')
         self.root.resizable(False, False)
 
-        # === Thêm ảnh nền ===
+         #Thêm ảnh nền
         self.bg_image = Image.open(bg_path)
         self.bg_image = self.bg_image.resize((500, 800))
         self.bg_photo = ImageTk.PhotoImage(self.bg_image)
@@ -24,7 +24,7 @@ class TicTacToe:
         self.bg_label = tk.Label(self.root, image=self.bg_photo)
         self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-        # Khoi tao pygame mixer
+        # Khởi tạo pygame mixer
         try:
             pygame.mixer.init()
             pygame.mixer.music.load(path)
@@ -32,51 +32,43 @@ class TicTacToe:
         except:
             print("Không tìm thấy file nhạc!")
         
-        # Khoi tao ban co (giữ nguyên logic cũ)
+        # Khởi tạo bàn cờ
         self.luoi = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         self.win = ''
         self.game_over = False
-        
         self.setup_ui()
         
     def setup_ui(self):
-        # Title
-        title_label = tk.Label(
-            self.root, 
-            text="TIC-TAC-TOE", 
-            font=("Times New Roman", 24),
-            fg="#f1ecef",
-            bg="#36502c"
-        )
+        # Tiêu đề
+        title_label = tk.Label(self.root, text="TIC-TAC-TOE", font=("Times New Roman", 24),fg="#FF69B4",bg="#4B0082")
         title_label.pack(pady=20)
         
-        # Subtitle
+        # Phụ đề (Bạn là X, máy là O nghen hehe), kiểu nói cho người ta hiểu trước khi chơi
         subtitle_label = tk.Label(
             self.root, 
             text="Bạn là X, Máy là O", 
             font=("Times New Roman", 14),
-            fg="#bdc3c7",
-            bg="#2c3e50"
+            fg="#FF69B4",
+            bg="#4B0082"
         )
         subtitle_label.pack(pady=(0, 20))
         
-        # Game board frame
+        # Bàn cờ
         self.board_frame = tk.Frame(self.root, bg="#2c3e50")
         self.board_frame.pack(pady=20)
         
-        # Create buttons for game board
+        # Tạo các nút cho bàn cờ
         self.buttons = []
         for i in range(9):
             row = i // 3
             col = i % 3
-            
             btn = tk.Button(
                 self.board_frame,
                 text="",
                 font=("Times New Roman", 20, "bold"),
                 width=6,
                 height=3,
-                bg="#34495e",
+                bg="#FF69B4",
                 fg="#ecf0f1",
                 activebackground="#3498db",
                 activeforeground="#ecf0f1",
@@ -87,24 +79,24 @@ class TicTacToe:
             btn.grid(row=row, column=col, padx=2, pady=2)
             self.buttons.append(btn)
         
-        # Status label
+        # Nhãn trạng thái (Lượt của bạn hoặc của máy)
         self.status_label = tk.Label(
             self.root,
             text="Lượt của bạn - Chọn một ô!",
             font=("Times New Roman", 12),
-            fg="#e74c3c",
-            bg="#2c3e50"
+            fg="#FF69B4",
+            bg="#4B0082"
         )
         self.status_label.pack(pady=20)
         
-        # Reset button
+        # Nút chơi lại
         reset_btn = tk.Button(
             self.root,
             text="CHƠI LẠI",
             font=("Times New Roman", 12, "bold"),
-            bg="#e74c3c",
+            bg="#FF69B4",
             fg="#ecf0f1",
-            activebackground="#c0392b",
+            activebackground="#FF69B4",
             activeforeground="#ecf0f1",
             width=15,
             height=2,
@@ -113,18 +105,18 @@ class TicTacToe:
         reset_btn.pack(pady=20)
 
     def trong(self):
-        """Kiem tra xem ô còn trống không (giữ nguyên logic cũ)"""
+        #Kiem tra xem ô còn trống không
         for i in range(9):
             if self.luoi[i] != 'X' and self.luoi[i] != 'O':
                 return True
         return False
 
     def ktra_dong(self, chon, x1, x2, x3):
-        """Kiem tra 3 ô có cùng kí hiệu không"""
+        #Kiểm tra xem 3 ô có cùng kí hiệu không
         return self.luoi[x1] == chon and self.luoi[x2] == chon and self.luoi[x3] == chon
 
     def ktra_all(self, chon):
-        """Kiểm tra tất cả các trường hợp thắng """
+        #Kiểm tra các trường hợp thắng, Hàng ngang giống, hàng dọc giống, và đường chéo phải giống
         # Hàng ngang
         if self.ktra_dong(chon, 0, 1, 2) or self.ktra_dong(chon, 3, 4, 5) or self.ktra_dong(chon, 6, 7, 8):
             return True
@@ -135,16 +127,16 @@ class TicTacToe:
         if self.ktra_dong(chon, 0, 4, 8) or self.ktra_dong(chon, 2, 4, 6):
             return True
         return False
-
+    #Nước đi của máy, mình xài randint cho bot thường nên nó sẽ hong được thông minh lắm nghen mọi người
     def nuoc_di_may(self):
-        """Tìm nước đi hợp lệ cho máy """
+        #Tìm nước đi hợp lệ
         while True:
             may = randint(0, 8)
-            if self.luoi[may] != 'X' and self.luoi[may] != 'O':
+            if self.luoi[may] != 'X' and self.luoi[may] != 'O': #Nếu xác định khác X và O thì => Ô này trống nghen, có nghĩa là máy đánh được
                 return may
 
     def update_board_display(self):
-        """Cập nhật hiển thị bàn cờ"""
+        #Cập nhật hiển thị trên bàn cờ
         for i in range(9):
             if self.luoi[i] == 'X':
                 self.buttons[i].config(text='X', fg="#e74c3c", state='disabled')
@@ -176,7 +168,7 @@ class TicTacToe:
             self.end_game()
             return
         
-        # Cập nhật status
+        # Cập nhật trạng trái
         self.status_label.config(text="Máy đang suy nghĩ...", fg="#f39c12")
         self.root.update()
         
@@ -184,11 +176,11 @@ class TicTacToe:
         self.root.after(1000, self.computer_move)
 
     def computer_move(self):
-        """Xử lý nước đi của máy"""
+        #Xử lí nước đi của máy
         if self.game_over:
             return
             
-        # Lượt máy (giữ nguyên logic cũ)
+        # Lượt máy 
         may_chon = self.nuoc_di_may()
         self.luoi[may_chon] = 'O'
         self.update_board_display()
@@ -204,11 +196,11 @@ class TicTacToe:
             self.end_game()
             return
         
-        # Cập nhật status
+        # Cập nhật trạng thái
         self.status_label.config(text="Lượt của bạn - Chọn một ô!", fg="#e74c3c")
 
     def end_game(self):
-        """Kết thúc game và hiển thị kết quả"""
+        #Kết thúc game và hiển thị ra kết quả
         self.game_over = True
         
         # Vô hiệu hóa tất cả buttons
@@ -235,16 +227,16 @@ class TicTacToe:
         self.win = ''
         self.game_over = False
         
-        # Reset buttons
+        # Đặt lại các nút bấm
         for i, btn in enumerate(self.buttons):
             btn.config(
                 text="",
                 state='normal',
-                bg="#34495e",
+                bg="#FF69B4",
                 fg="#ecf0f1"
             )
         
-        # Reset status
+        # Đặt lại dòng thông báo của game về mặc định
         self.status_label.config(text="Lượt của bạn - Chọn một ô!", fg="#e74c3c")
 
 # Chạy game
