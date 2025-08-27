@@ -1,0 +1,112 @@
+from random import randint
+
+luoi = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+win = ''
+
+def inluoi():
+    print("\nBàn cờ hiện tại:")
+    for i in range(0, 9, 3):
+        print(f" {luoi[i]} | {luoi[i+1]} | {luoi[i+2]} ")
+        if i < 6:
+            print("-----------")
+    print()
+
+def trong():
+    for i in range(9):
+        if luoi[i] != 'X' and luoi[i] != 'O':
+            return True
+    return False
+
+def ktra_dong(chon, x1, x2, x3):
+    return luoi[x1] == chon and luoi[x2] == chon and luoi[x3] == chon
+
+def ktra_all(chon):
+    return (ktra_dong(chon, 0, 1, 2) or ktra_dong(chon, 3, 4, 5) or ktra_dong(chon, 6, 7, 8) or
+            ktra_dong(chon, 0, 3, 6) or ktra_dong(chon, 1, 4, 7) or ktra_dong(chon, 2, 5, 8) or
+            ktra_dong(chon, 0, 4, 8) or ktra_dong(chon, 2, 4, 6))
+
+def danh_gia():
+    if ktra_all('O'): return 10
+    elif ktra_all('X'): return -10
+    else: return 0
+
+def minimax(do_sau, la_ai):
+    diem = danh_gia()
+    if diem == 10: return diem - do_sau
+    if diem == -10: return diem + do_sau
+    if not trong(): return 0
+    
+    if la_ai:
+        tot_nhat = -1000
+        for i in range(9):
+            if luoi[i] != 'X' and luoi[i] != 'O':
+                cu = luoi[i]
+                luoi[i] = 'O'
+                diem = minimax(do_sau + 1, False)
+                luoi[i] = cu
+                tot_nhat = max(tot_nhat, diem)
+        return tot_nhat
+    else:
+        tot_nhat = 1000
+        for i in range(9):
+            if luoi[i] != 'X' and luoi[i] != 'O':
+                cu = luoi[i]
+                luoi[i] = 'X'
+                diem = minimax(do_sau + 1, True)
+                luoi[i] = cu
+                tot_nhat = min(tot_nhat, diem)
+        return tot_nhat
+
+def nuoc_di_ai():
+    tot_nhat = -1000
+    nuoc_di = -1
+    for i in range(9):
+        if luoi[i] != 'X' and luoi[i] != 'O':
+            cu = luoi[i]
+            luoi[i] = 'O'
+            diem = minimax(0, False)
+            luoi[i] = cu
+            if diem > tot_nhat:
+                tot_nhat = diem
+                nuoc_di = i
+    return nuoc_di
+
+print("=== TIC-TAC-TOE vs AI MINIMAX ===")
+print("Bạn: X, AI: O")
+inluoi()
+
+while trong():
+    # Người chơi
+    while True:
+        try:
+            nguoi = int(input('Chọn ô (0-8): '))
+            if 0 <= nguoi <= 8 and luoi[nguoi] not in ['X', 'O']:
+                luoi[nguoi] = 'X'
+                break
+            else:
+                print('Ô không hợp lệ!')
+        except:
+            print('Nhập số!')
+    
+    if ktra_all('X'):
+        win = 'Bạn'
+        break
+    
+    if not trong():
+        break
+    
+    # AI
+    may_chon = nuoc_di_ai()
+    luoi[may_chon] = 'O'
+    print(f"AI chọn ô {may_chon}")
+    inluoi()
+    
+    if ktra_all('O'):
+        win = 'AI'
+        break
+
+inluoi()
+if win == '':
+    print('HÒA!')
+else:
+    print(f'{win.upper()} THẮNG!')
