@@ -1,0 +1,254 @@
+import os
+import pygame
+import tkinter as tk
+from tkinter import messagebox
+from random import randint
+from PIL import Image, ImageTk
+path = os.path.join("C:/Users/Admin/Documents/Maze Robot", "Base Mheuz1.wav")
+bg_path = "C:/Users/Admin/Documents/Maze Robot/background.jpg"
+
+
+class TicTacToe:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("TIC-TAC-TOE GAME")
+        self.root.geometry("500x800")
+        self.root.configure(bg='#2c3e50')
+        self.root.resizable(False, False)
+
+        # === Thêm ảnh nền ===
+        self.bg_image = Image.open(bg_path)
+        self.bg_image = self.bg_image.resize((500, 800))
+        self.bg_photo = ImageTk.PhotoImage(self.bg_image)
+
+        self.bg_label = tk.Label(self.root, image=self.bg_photo)
+        self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+
+        # Khoi tao pygame mixer
+        try:
+            pygame.mixer.init()
+            pygame.mixer.music.load(path)
+            pygame.mixer.music.play(-1)  # Lap vo han
+        except:
+            print("Không tìm thấy file nhạc!")
+        
+        # Khoi tao ban co (giữ nguyên logic cũ)
+        self.luoi = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        self.win = ''
+        self.game_over = False
+        
+        self.setup_ui()
+        
+    def setup_ui(self):
+        # Title
+        title_label = tk.Label(
+            self.root, 
+            text="TIC-TAC-TOE", 
+            font=("Times New Roman", 24),
+            fg="#f1ecef",
+            bg="#36502c"
+        )
+        title_label.pack(pady=20)
+        
+        # Subtitle
+        subtitle_label = tk.Label(
+            self.root, 
+            text="Bạn là X, Máy là O", 
+            font=("Times New Roman", 14),
+            fg="#bdc3c7",
+            bg="#2c3e50"
+        )
+        subtitle_label.pack(pady=(0, 20))
+        
+        # Game board frame
+        self.board_frame = tk.Frame(self.root, bg="#2c3e50")
+        self.board_frame.pack(pady=20)
+        
+        # Create buttons for game board
+        self.buttons = []
+        for i in range(9):
+            row = i // 3
+            col = i % 3
+            
+            btn = tk.Button(
+                self.board_frame,
+                text="",
+                font=("Times New Roman", 20, "bold"),
+                width=6,
+                height=3,
+                bg="#34495e",
+                fg="#ecf0f1",
+                activebackground="#3498db",
+                activeforeground="#ecf0f1",
+                relief="raised",
+                bd=3,
+                command=lambda idx=i: self.player_move(idx)
+            )
+            btn.grid(row=row, column=col, padx=2, pady=2)
+            self.buttons.append(btn)
+        
+        # Status label
+        self.status_label = tk.Label(
+            self.root,
+            text="Lượt của bạn - Chọn một ô!",
+            font=("Times New Roman", 12),
+            fg="#e74c3c",
+            bg="#2c3e50"
+        )
+        self.status_label.pack(pady=20)
+        
+        # Reset button
+        reset_btn = tk.Button(
+            self.root,
+            text="CHƠI LẠI",
+            font=("Times New Roman", 12, "bold"),
+            bg="#e74c3c",
+            fg="#ecf0f1",
+            activebackground="#c0392b",
+            activeforeground="#ecf0f1",
+            width=15,
+            height=2,
+            command=self.reset_game
+        )
+        reset_btn.pack(pady=20)
+
+    def trong(self):
+        """Kiem tra xem ô còn trống không (giữ nguyên logic cũ)"""
+        for i in range(9):
+            if self.luoi[i] != 'X' and self.luoi[i] != 'O':
+                return True
+        return False
+
+    def ktra_dong(self, chon, x1, x2, x3):
+        """Kiem tra 3 ô có cùng kí hiệu không"""
+        return self.luoi[x1] == chon and self.luoi[x2] == chon and self.luoi[x3] == chon
+
+    def ktra_all(self, chon):
+        """Kiểm tra tất cả các trường hợp thắng """
+        # Hàng ngang
+        if self.ktra_dong(chon, 0, 1, 2) or self.ktra_dong(chon, 3, 4, 5) or self.ktra_dong(chon, 6, 7, 8):
+            return True
+        # Hàng dọc  
+        if self.ktra_dong(chon, 0, 3, 6) or self.ktra_dong(chon, 1, 4, 7) or self.ktra_dong(chon, 2, 5, 8):
+            return True
+        # Đường chéo
+        if self.ktra_dong(chon, 0, 4, 8) or self.ktra_dong(chon, 2, 4, 6):
+            return True
+        return False
+
+    def nuoc_di_may(self):
+        """Tìm nước đi hợp lệ cho máy """
+        while True:
+            may = randint(0, 8)
+            if self.luoi[may] != 'X' and self.luoi[may] != 'O':
+                return may
+
+    def update_board_display(self):
+        """Cập nhật hiển thị bàn cờ"""
+        for i in range(9):
+            if self.luoi[i] == 'X':
+                self.buttons[i].config(text='X', fg="#e74c3c", state='disabled')
+            elif self.luoi[i] == 'O':
+                self.buttons[i].config(text='O', fg="#3498db", state='disabled')
+
+    def player_move(self, position):
+        """Xử lý nước đi của người chơi"""
+        if self.game_over:
+            return
+            
+        # Kiểm tra ô đã được chọn chưa
+        if self.luoi[position] == 'X' or self.luoi[position] == 'O':
+            messagebox.showwarning("Cảnh báo", "Ô đã được chọn, hãy chọn ô khác!")
+            return
+        
+        # Đánh dấu nước đi của người chơi
+        self.luoi[position] = 'X'
+        self.update_board_display()
+        
+        # Kiểm tra người chơi thắng
+        if self.ktra_all('X'):
+            self.win = 'Bạn'
+            self.end_game()
+            return
+        
+        # Kiểm tra hòa sau nước đi của người chơi
+        if not self.trong():
+            self.end_game()
+            return
+        
+        # Cập nhật status
+        self.status_label.config(text="Máy đang suy nghĩ...", fg="#f39c12")
+        self.root.update()
+        
+        # Delay nhỏ để tạo hiệu ứng máy suy nghĩ
+        self.root.after(1000, self.computer_move)
+
+    def computer_move(self):
+        """Xử lý nước đi của máy"""
+        if self.game_over:
+            return
+            
+        # Lượt máy (giữ nguyên logic cũ)
+        may_chon = self.nuoc_di_may()
+        self.luoi[may_chon] = 'O'
+        self.update_board_display()
+        
+        # Kiểm tra máy thắng
+        if self.ktra_all('O'):
+            self.win = 'Máy'
+            self.end_game()
+            return
+        
+        # Kiểm tra hòa
+        if not self.trong():
+            self.end_game()
+            return
+        
+        # Cập nhật status
+        self.status_label.config(text="Lượt của bạn - Chọn một ô!", fg="#e74c3c")
+
+    def end_game(self):
+        """Kết thúc game và hiển thị kết quả"""
+        self.game_over = True
+        
+        # Vô hiệu hóa tất cả buttons
+        for btn in self.buttons:
+            btn.config(state='disabled')
+        
+        # Hiển thị kết quả (giữ nguyên logic cũ)
+        if self.win == '':
+            result_text = "KẾT QUẢ: HÒA!"
+            self.status_label.config(text=result_text, fg="#f39c12")
+            messagebox.showinfo("Kết quả", "Trận đấu hòa!")
+        else:
+            result_text = f"KẾT QUẢ: {self.win.upper()} THẮNG!"
+            if self.win == 'Bạn':
+                self.status_label.config(text=result_text, fg="#27ae60")
+                messagebox.showinfo("Kết quả", "Chúc mừng! Bạn đã thắng!")
+            else:
+                self.status_label.config(text=result_text, fg="#e74c3c")
+                messagebox.showinfo("Kết quả", "Máy thắng! Thử lại lần sau nhé!")
+
+    def reset_game(self):
+        """Reset game để chơi lại (giữ nguyên logic khởi tạo cũ)"""
+        self.luoi = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        self.win = ''
+        self.game_over = False
+        
+        # Reset buttons
+        for i, btn in enumerate(self.buttons):
+            btn.config(
+                text="",
+                state='normal',
+                bg="#34495e",
+                fg="#ecf0f1"
+            )
+        
+        # Reset status
+        self.status_label.config(text="Lượt của bạn - Chọn một ô!", fg="#e74c3c")
+
+# Chạy game
+if __name__ == "__main__":
+    root = tk.Tk()
+    game = TicTacToe(root)
+    root.mainloop()
