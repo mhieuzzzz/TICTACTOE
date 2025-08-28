@@ -1,16 +1,24 @@
 import tkinter as tk
 from tkinter import messagebox, font
 from random import randint
+from PIL import Image, ImageTk
 import threading
 import time
-
+import pygame
 class TicTacToeGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("🎮 TIC-TAC-TOE vs AI MINIMAX 🤖")
+        self.root.title(" TIC-TAC-TOE vs AI SIU CAP VIP PRO")
         self.root.geometry("600x700")
         self.root.resizable(False, False)
+        #Khoi tao pygame mixer
+        pygame.mixer.init()
         
+        #Phat nhac nen lap vo han
+        pygame.mixer.music.load("Base Mheuz1.wav")   
+        pygame.mixer.music.play(-1)   # Lap vo han
+        pygame.mixer.music.set_volume(0.3)   # Chinh am luong
+                
         # Gradient background color
         self.root.configure(bg='#1a1a2e')
         
@@ -20,10 +28,10 @@ class TicTacToeGUI:
         self.player_turn = True
         
         # Fonts
-        self.title_font = font.Font(family="Arial Black", size=20, weight="bold")
-        self.button_font = font.Font(family="Arial", size=28, weight="bold")
-        self.info_font = font.Font(family="Arial", size=12)
-        self.status_font = font.Font(family="Arial", size=14, weight="bold")
+        self.title_font = font.Font(family="Times New Roman", size=20, weight="bold")
+        self.button_font = font.Font(family="Times New Roman", size=28, weight="bold")
+        self.info_font = font.Font(family="Times New Roman", size=12)
+        self.status_font = font.Font(family="Times New Roman", size=14, weight="bold")
         
         self.setup_ui()
         
@@ -33,7 +41,7 @@ class TicTacToeGUI:
         title_frame.pack(pady=20)
         
         title_label = tk.Label(title_frame, 
-                              text="🎮 TIC-TAC-TOE vs AI 🤖",
+                              text=" TIC-TAC-TOE vs AI ",
                               font=self.title_font,
                               fg='#00d4ff',
                               bg='#1a1a2e')
@@ -44,7 +52,7 @@ class TicTacToeGUI:
         info_frame.pack(pady=10)
         
         player_info = tk.Label(info_frame,
-                              text="🔥 Bạn: X  |  🤖 AI: O",
+                              text=" Bạn: X  |   AI: O",
                               font=self.info_font,
                               fg='#ffffff',
                               bg='#1a1a2e')
@@ -52,7 +60,7 @@ class TicTacToeGUI:
         
         # Status label
         self.status_label = tk.Label(self.root,
-                                    text="🎯 Lượt của bạn!",
+                                    text=" Lượt của bạn!",
                                     font=self.status_font,
                                     fg='#00ff88',
                                     bg='#1a1a2e')
@@ -93,6 +101,23 @@ class TicTacToeGUI:
         # Control buttons frame
         control_frame = tk.Frame(self.root, bg='#1a1a2e')
         control_frame.pack(pady=30)
+        self.music_on = True
+
+        def toggle_music():
+            if self.music_on:
+                pygame.mixer.music.pause()
+                self.music_on = False
+            else:
+                pygame.mixer.music.unpause()
+                self.music_on = True
+
+        music_btn = tk.Button(control_frame,
+                            text="🎵 Nhạc",
+                            font=self.info_font,
+                            bg='#8e44ad',
+                            fg='white',
+                            command=toggle_music)
+        music_btn.pack(side='left', padx=10)
         
         # New game button
         new_game_btn = tk.Button(control_frame,
@@ -112,7 +137,7 @@ class TicTacToeGUI:
         
         # Quit button
         quit_btn = tk.Button(control_frame,
-                            text="❌ Thoát",
+                            text="Thoát đi đồ gà    ",
                             font=self.info_font,
                             bg='#ff4757',
                             fg='#ffffff',
@@ -131,7 +156,7 @@ class TicTacToeGUI:
         score_frame.pack(pady=20)
         
         self.score_label = tk.Label(score_frame,
-                                   text="🏆 Tỷ số - Bạn: 0  |  AI: 0  |  Hòa: 0",
+                                   text=" Tỷ số - Bạn: 0  |  AI: 0  |  Hòa: 0",
                                    font=self.info_font,
                                    fg='#ffd700',
                                    bg='#1a1a2e')
@@ -178,7 +203,7 @@ class TicTacToeGUI:
                 return
             
             self.player_turn = False
-            self.status_label.configure(text="🤖 AI đang suy nghĩ...", fg='#ff9f43')
+            self.status_label.configure(text="Chờ tui suy nghĩ cái...", fg='#ff9f43')
             self.root.update()
             
             # AI move with delay for better UX
@@ -202,29 +227,29 @@ class TicTacToeGUI:
                 return
         
         self.player_turn = True
-        self.status_label.configure(text="🎯 Lượt của bạn!", fg='#00ff88')
+        self.status_label.configure(text=" Lượt của bạn!", fg='#00ff88')
     
     def end_game(self, winner):
         self.game_over = True
         
         if winner == 'Bạn':
             self.player_wins += 1
-            self.status_label.configure(text="🎉 BẠN THẮNG! 🎉", fg='#00ff88')
-            messagebox.showinfo("Kết quả", "🎉 Chúc mừng! Bạn đã thắng! 🎉")
+            self.status_label.configure(text=" BẠN THẮNG! ", fg='#00ff88')
+            messagebox.showinfo("Kết quả", " Chúc mừng! Bạn đã thắng! ")
         elif winner == 'AI':
             self.ai_wins += 1
-            self.status_label.configure(text="🤖 AI THẮNG! 🤖", fg='#ff4757')
-            messagebox.showinfo("Kết quả", "🤖 AI đã thắng! Thử lại lần nữa! 🤖")
+            self.status_label.configure(text=" AI THẮNG! ", fg='#ff4757')
+            messagebox.showinfo("Kết quả", " AI đã thắng! Không lẽ bạn để cho AI thắng vậy hả đồ gà ? 🤖")
         else:
             self.draws += 1
-            self.status_label.configure(text="🤝 HÒA! 🤝", fg='#ffd700')
-            messagebox.showinfo("Kết quả", "🤝 Trận đấu hòa! 🤝")
+            self.status_label.configure(text=" HÒA! Chơi game mà hoà AI, đồ gà !!", fg='#ffd700')
+            messagebox.showinfo("Kết quả", " Trận đấu hòa! ")
         
         self.update_score()
     
     def update_score(self):
         self.score_label.configure(
-            text=f"🏆 Tỷ số - Bạn: {self.player_wins}  |  AI: {self.ai_wins}  |  Hòa: {self.draws}"
+            text=f" Tỷ số - Bạn: {self.player_wins}  |  AI: {self.ai_wins}  |  Hòa: {self.draws}"
         )
     
     def new_game(self):
@@ -237,9 +262,9 @@ class TicTacToeGUI:
             for j in range(3):
                 self.buttons[i][j].configure(text='', bg='#16213e', fg='#ffffff', relief='raised')
         
-        self.status_label.configure(text="🎯 Lượt của bạn!", fg='#00ff88')
+        self.status_label.configure(text=" Lượt của bạn!", fg='#00ff88')
     
-    # Game logic methods (giữ nguyên từ code gốc)
+    # Game logic methods 
     def trong(self):
         for i in range(9):
             if self.luoi[i] != 'X' and self.luoi[i] != 'O':
